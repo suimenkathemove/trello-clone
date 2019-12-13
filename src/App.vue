@@ -5,6 +5,7 @@
       :key="list.id"
       class="list"
       :list="list"
+      :listName.sync="list.name"
       @add-card="addCard"
     />
     <input type="text" class="list-input" @change="addList" />
