@@ -7,6 +7,8 @@
       :list="list"
       :listName.sync="list.name"
       @add-card="addCard"
+      @remove-list="removeList"
+      @remove-card="removeCard"
     />
     <input type="text" class="list-input" @change="addList" />
   </div>
@@ -18,6 +20,7 @@ import List from "@/components/List.vue";
 import { IList } from "@/types";
 import { createInitialLists } from "@/initialData";
 import { IAddCardEvent } from "@/components/List.vue";
+import { IRemoveCardEvent } from "@/components/Card.vue";
 
 @Component({
   components: {
@@ -52,6 +55,20 @@ export default class App extends Vue {
     list.cards.push(newCard);
 
     ++this.cardCreatedCount;
+  }
+
+  removeList(listId: number): void {
+    const listIndex = this.lists.findIndex(list => list.id === listId);
+    if (listIndex === -1) return;
+    this.lists.splice(listIndex, 1);
+  }
+
+  removeCard({ listId, cardId }: IRemoveCardEvent): void {
+    const list = this.lists.find(list => list.id === listId);
+    if (list === undefined) return;
+    const cardIndex = list.cards.findIndex(card => card.id === cardId);
+    if (cardIndex === -1) return;
+    list.cards.splice(cardIndex, 1);
   }
 }
 </script>
