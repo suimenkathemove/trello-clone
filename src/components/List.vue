@@ -18,6 +18,10 @@
       :card="card"
       :cardText.sync="card.text"
       @remove-card="removeCard"
+      draggable
+      @dragstart.native.stop="onDragStart(card, $event)"
+      @dragover.native="moveCard(card.id, $event)"
+      @dragend.native="onDragEnd"
     />
     <input type="text" class="card-input" @change="addCard" />
   </div>
@@ -27,12 +31,19 @@
 import { Component, Vue, Prop, Emit, PropSync } from "vue-property-decorator";
 import Card from "@/components/Card.vue";
 import Cross from "@/components/Cross.vue";
-import { IList } from "@/types";
+import { IList, ICard } from "@/types";
 import { IRemoveCardEvent } from "@/components/Card.vue";
+import { ICardData } from "@/App.vue";
 
 export interface IAddCardEvent {
   listId: number;
   text: string;
+}
+
+export interface IMoveCardEvent {
+  listId: number;
+  cardId: number;
+  event: DragEvent & { currentTarget: HTMLDivElement };
 }
 
 @Component({
@@ -47,6 +58,9 @@ export default class List extends Vue {
 
   @PropSync("listName", { type: String, required: true })
   syncedListName!: IList["name"];
+
+  @PropSync("draggedCardData", { required: true })
+  syncedDraggedCardData!: ICardData | null;
 
   contenteditable = false;
 
@@ -88,6 +102,32 @@ export default class List extends Vue {
   @Emit()
   removeCard(event: IRemoveCardEvent): IRemoveCardEvent {
     return event;
+  }
+
+  onDragStart(card: ICard, event: DragEvent): void {
+    if (event.dataTransfer == null) return;
+    event.dataTransfer.setData("text/plain", "");
+
+    this.syncedDraggedCardData = {
+      listId: this.list.id,
+      card
+    };
+  }
+
+  @Emit()
+  moveCard(
+    cardId: number,
+    event: DragEvent & { currentTarget: HTMLDivElement }
+  ): IMoveCardEvent {
+    return {
+      listId: this.list.id,
+      cardId,
+      event
+    };
+  }
+
+  onDragEnd(): void {
+    this.syncedDraggedCardData = null;
   }
 }
 </script>
